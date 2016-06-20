@@ -62,7 +62,27 @@ namespace ShortestRouteFunctionForThaumcraft
             , { "Ira", new List<string>(){ "Telum", "Ignis" } }
         };
 
-        private List<string> VisitedCollection = new List<string>();
+        //private Dictionary<string, List<string>> aspectSourceMap = null;
+        //public Dictionary<string, List<string>> AspectSourceMap
+        //{
+        //    get
+        //    {
+        //        if(aspectSourceMap == null)
+        //        {
+        //            aspectSourceMap = MapAspectSources();
+        //        }
+
+        //        return aspectSourceMap;
+
+        //    }
+        //}
+
+        //private Dictionary<string, List<string>> MapAspectSources()
+        //{
+        //    Dictionary<string, List<string>> aspects = AspectMap.Where(a => a.Value.Count == 2).ToDictionary(a => a.Key, b => b.Value);
+
+        //}
+
 
         public void PromptForShortestChain()
         {
@@ -83,7 +103,7 @@ namespace ShortestRouteFunctionForThaumcraft
                 Console.Write("\nPlease enter the name of the ending Aspect: ");
                 endingAspect = Console.ReadLine();
 
-                if (!AspectMap.ContainsKey(startingAspect))
+                if (!AspectMap.ContainsKey(endingAspect))
                 {
                     Console.WriteLine("NOTICE: your ending Aspect does not exist..");
                     continue;
@@ -118,32 +138,26 @@ namespace ShortestRouteFunctionForThaumcraft
         {
             //start a chain with the first aspect, pass chain to recursive function.
             // recursive function takes list of aspects, the name of the last element, and ... just write the damn thing...
-
-            if (VisitedCollection.Count > 0)
-            {
-                VisitedCollection.Clear();
-            }
-
-            VisitedCollection.Add(first);
-
-            List<string> finalList = RouteHelper(first, last);
+            List<string> finalList = RouteHelper(first, last, new List<string>());
             finalList.Add(first);
             finalList.Reverse();
             return finalList;
 
         }
 
-        private List<string> RouteHelper (string currentAspect, string final)
+        private List<string> RouteHelper (string currentAspect, string final, List<string> AlreadyVisited)
         {
             List<string> aspectConnections = new List<string>();
             aspectConnections.AddRange(AspectMap[currentAspect]);
+
+            AlreadyVisited.Add(currentAspect);
 
             if (aspectConnections.Contains(final))
             {
                 return new List<string>() { final };
             }
 
-            aspectConnections.RemoveAll(a => VisitedCollection.Contains(a));
+            aspectConnections.RemoveAll(a => AlreadyVisited.Contains(a));
 
             if (aspectConnections.Count == 0)
             {
@@ -154,31 +168,30 @@ namespace ShortestRouteFunctionForThaumcraft
             List<string> tempRoute = null;
             string shortestAspect = null;
 
-            if (aspectConnections.Count > 0)
+            for (int i = 0; i < aspectConnections.Count; i++)
             {
-                for (int i = 0; i < aspectConnections.Count; i++)
+                string aspect = aspectConnections[i];
+
+                AlreadyVisited.Add(aspect);
+                List<string> set = new List<string>();
+                set.AddRange(AlreadyVisited);
+
+                tempRoute = RouteHelper(aspect, final, set);
+
+                if ((shortRoute == null && tempRoute != null)
+                    || (shortRoute != null
+                        && tempRoute != null
+                        && tempRoute.Count < shortRoute.Count)
+                    )
                 {
-                    string aspect = aspectConnections[i];
-
-                    VisitedCollection.Add(aspect);
-
-                    tempRoute = RouteHelper(aspect, final);
-
-                    if ((shortRoute == null && tempRoute != null)
-                        || (shortRoute != null
-                            && tempRoute != null
-                            && tempRoute.Count < shortRoute.Count)
-                        )
-                    {
-                        shortestAspect = aspect;
-                        shortRoute = tempRoute;
-                    }
+                    shortestAspect = aspect;
+                    shortRoute = tempRoute;
                 }
+            }
 
-                if (shortRoute != null)
-                {
-                    shortRoute.Add(shortestAspect);
-                }
+            if (shortRoute != null)
+            {
+                shortRoute.Add(shortestAspect);
             }
 
             return shortRoute;
