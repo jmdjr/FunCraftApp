@@ -11,7 +11,7 @@ namespace ShortestRouteFunctionForThaumcraft
         private Dictionary<string, List<string>> AspectMap = new Dictionary<string, List<string>>(){
             { "Perditio", new List<string>(){ "Vitium", "Vacuos", "Vinculum", "Venenum", "Mortuus", "Permutatio", "Gelum" } }
             , { "Aer", new List<string>(){ "Lux", "Vacuos", "Auram", "Sensus", "Volatus", "Motus", "Arbor", "Tempestas" } }
-            , { "Ignis", new List<string>(){ "Lux", "Potentia", "Gelum", "Cognitio", "Telum", "Ira", "Infernus" } }
+            , { "Ignis", new List<string>(){ "Lux", "Potentia", "Gelum", "Cognitio", "Telum", /*"Ira" *//*, "Infernus"*/ } }
             , { "Aqua", new List<string>(){ "Tempestas", "Venenum", "Victus", "Limus" } }
             , { "Terra", new List<string>(){ "Victus", "Iter", "Metallum", "Perfodio", "Vitreus", "Herba", "Tutamen" } }
             , { "Ordo", new List<string>(){ "Potentia", "Sano", "Motus", "Permutatio", "Instrumentum", "Vitreus", } }
@@ -42,7 +42,7 @@ namespace ShortestRouteFunctionForThaumcraft
             , { "Pannus", new List<string>(){ "Instrumentum", "Bestia" } }
             , { "Lucrum", new List<string>(){ "Fames", "Humanus" } }
             , { "Machina", new List<string>(){ "Instrumentum", "Motus" } }
-            , { "Telum", new List<string>(){ "Instrumentum", "Ignis", "Ira" } }
+            , { "Telum", new List<string>(){ "Instrumentum", "Ignis", /*"Ira" */} }
             , { "Bestia", new List<string>(){ "Motus", "Victus", "Corpus", "Pannus", "Humanus" } }
             , { "Exanimis", new List<string>(){ "Motus", "Mortuus" } }
             , { "Spiritus", new List<string>(){ "Mortuus", "Victus", "Sensus", "Cognitio" } }
@@ -50,16 +50,16 @@ namespace ShortestRouteFunctionForThaumcraft
             , { "Corpus", new List<string>(){ "Mortuus", "Bestia" } }
             , { "Venenum", new List<string>(){ "Aqua", "Perditio" } }
             , { "Vinculum", new List<string>(){ "Motus", "Perditio" } }
-            , { "Sensus", new List<string>(){ "Aer", "Spiritus", "Invidia" } }
-            , { "Fames", new List<string>(){ "Lucrum", "Vacuos", "Victus", "Invidia" } }
+            , { "Sensus", new List<string>(){ "Aer", "Spiritus"/*, "Invidia"*/ } }
+            , { "Fames", new List<string>(){ "Lucrum", "Vacuos", "Victus"/*, "Invidia"*/ } }
             , { "Auram", new List<string>(){ "Aer", "Praecantatio" } }
-            , { "Praecantatio", new List<string>(){ "Vacuos", "Potentia", "Vitium", "Auram", "Infernus" } }
+            , { "Praecantatio", new List<string>(){ "Vacuos", "Potentia", "Vitium", "Auram", /*"Infernus"*/ } }
             , { "Vitium", new List<string>(){ "Praecantatio", "Perditio" } }
             , { "Tenebrae", new List<string>(){ "Vacuos", "Lux", "Alienis" } }
             , { "Alienis", new List<string>(){ "Vacuos", "Tenebrae" } }
-            , { "Invidia", new List<string>(){ "Sensus", "Fames" } }
-            , { "Infernus", new List<string>(){ "Ignis", "Praecantatio" } }
-            , { "Ira", new List<string>(){ "Telum", "Ignis" } }
+            //, { "Invidia", new List<string>(){ "Sensus", "Fames" } }
+            //, { "Infernus", new List<string>(){ "Ignis", "Praecantatio" } }
+            //, { "Ira", new List<string>(){ "Telum", "Ignis" } }
         };
 
         //private Dictionary<string, List<string>> aspectSourceMap = null;
@@ -88,7 +88,7 @@ namespace ShortestRouteFunctionForThaumcraft
         {
             string startingAspect;
             string endingAspect;
-
+            int requiredHops;
             do
             {
                 Console.Write("Please enter the name of the starting Aspect: ");
@@ -109,10 +109,21 @@ namespace ShortestRouteFunctionForThaumcraft
                     continue;
                 }
 
+                Console.Write("\nPlease enter the number of spaces: ");
+                try
+                {
+                    requiredHops = int.Parse(Console.ReadLine());
+                }
+                catch(Exception)
+                {
+                    Console.Write("\nParse failed, shortest path option selected. ");
+                    requiredHops = 0;
+
+                }
                 // run a recursive loop through dictionary from starting aspect to the shortest route.
                 // print the names of the apsects in order from start to end.
 
-                List<string> aspectChain = AspectRouteFinder(startingAspect, endingAspect);
+                List<string> aspectChain = AspectRouteFinder(startingAspect, endingAspect, requiredHops);
 
                 Console.Write("\n\nShortest chain: ");
                 foreach (string aspect in aspectChain)
@@ -134,18 +145,18 @@ namespace ShortestRouteFunctionForThaumcraft
             return answer == "y";
         }
 
-        private List<string> AspectRouteFinder (string first, string last)
+        private List<string> AspectRouteFinder (string first, string last, int hops)
         {
             //start a chain with the first aspect, pass chain to recursive function.
             // recursive function takes list of aspects, the name of the last element, and ... just write the damn thing...
-            List<string> finalList = RouteHelper(first, last, new List<string>());
+            List<string> finalList = RouteHelper(first, last, new List<string>(), hops);
             finalList.Add(first);
             finalList.Reverse();
             return finalList;
 
         }
 
-        private List<string> RouteHelper (string currentAspect, string final, List<string> AlreadyVisited)
+        private List<string> RouteHelper (string currentAspect, string final, List<string> AlreadyVisited, int hops = 0)
         {
             List<string> aspectConnections = new List<string>();
             aspectConnections.AddRange(AspectMap[currentAspect]);
@@ -181,7 +192,14 @@ namespace ShortestRouteFunctionForThaumcraft
                 if ((shortRoute == null && tempRoute != null)
                     || (shortRoute != null
                         && tempRoute != null
-                        && tempRoute.Count < shortRoute.Count)
+                        && ((shortRoute.Count > hops
+                                && tempRoute.Count >= hops
+                                && tempRoute.Count < shortRoute.Count)
+                            ||(shortRoute.Count < hops
+                               && tempRoute.Count <= hops
+                               && tempRoute.Count > shortRoute.Count)
+                            )
+                        )
                     )
                 {
                     shortestAspect = aspect;
